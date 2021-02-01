@@ -9,7 +9,7 @@
 // pin 5 - Data/Command select (D/C)
 // pin 4 - LCD chip select (CS)
 // pin 3 - LCD reset (RST)
-Adafruit_PCD8544 display = Adafruit_PCD8544(8, 9, 10, 11, 12);
+Adafruit_PCD8544 display = Adafruit_PCD8544(10, 9, 8, 7, 6);
 
 const unsigned char tysonLogo [] PROGMEM = {
   // 'tyson, 84x48px
@@ -50,10 +50,10 @@ const unsigned char tysonLogo [] PROGMEM = {
 
 Servo ESC;
 
-static int powerButtonPin = 2;
-static int motorPin = 6;
+static int powerButtonPin = 4;
+static int motorPin = 2;
 static int inputVoltagePin = A0;
-static int backlightPin = 13;
+static int backlightPin = 11;
 
 int targetMotorPower = 30;
 int currentMotorPower = 30;
@@ -67,7 +67,7 @@ void setup() {
   digitalWrite(backlightPin, HIGH);
 
   display.begin();
-  display.setContrast(40);
+  display.setContrast(50);
 
   ESC.attach(motorPin, 1000, 2000);
 
@@ -79,11 +79,13 @@ void setup() {
   display.drawBitmap(0, 0,  tysonLogo, 84, 48, 1);
   display.display();
   delay(3000);
+
+  Serial.begin(57600);
 }
 
 void loop() {
   int powerMode = digitalRead(powerButtonPin);
-
+  Serial.println(powerMode);
   if (powerMode == LOW && motorState == false) {
     motorState = true;
     targetMotorPower = 80;
@@ -97,7 +99,7 @@ void loop() {
   } else if (targetMotorPower < currentMotorPower) {
     currentMotorPower -= 1;
   }
-  
+  Serial.println(currentMotorPower);
   ESC.write(currentMotorPower);
 
   int inputVoltageReading = analogRead(inputVoltagePin);
