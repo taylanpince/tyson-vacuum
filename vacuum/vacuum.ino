@@ -50,8 +50,8 @@ const unsigned char tysonLogo [] PROGMEM = {
 
 Servo ESC;
 
-static int powerButtonPin = 4;
-static int motorPin = 2;
+static int powerButtonPin = 2;
+static int motorPin = 4;
 static int inputVoltagePin = A0;
 static int backlightPin = 11;
 
