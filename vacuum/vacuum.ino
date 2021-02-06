@@ -58,8 +58,10 @@ static int backlightPin = 13;
 int targetMotorPower = 30;
 int currentMotorPower = 30;
 bool motorState = false;
+bool vacuumEnabled = true;
 
 double inputVoltage = 0.0;
+int chargingState = 0;
 
 void setup() {
   // Turn backlight on
@@ -82,22 +84,26 @@ void setup() {
 }
 
 void loop() {
-  int powerMode = digitalRead(powerButtonPin);
-
-  if (powerMode == LOW && motorState == false) {
-    motorState = true;
-    targetMotorPower = 80;
-  } else if (powerMode == HIGH && motorState == true) {
-    motorState = false;
-    targetMotorPower = 30;
-  }
-
-  if (targetMotorPower > currentMotorPower) {
-    currentMotorPower += 1;
-  } else if (targetMotorPower < currentMotorPower) {
-    currentMotorPower -= 1;
-  }
+  if (vacuumEnabled) {
+    int powerMode = digitalRead(powerButtonPin);
   
+    if (powerMode == LOW && motorState == false) {
+      motorState = true;
+      targetMotorPower = 80;
+    } else if (powerMode == HIGH && motorState == true) {
+      motorState = false;
+      targetMotorPower = 30;
+    }
+  
+    if (targetMotorPower > currentMotorPower) {
+      currentMotorPower += 1;
+    } else if (targetMotorPower < currentMotorPower) {
+      currentMotorPower -= 1;
+    }
+  } else {
+    currentMotorPower = 0;
+  }
+
   ESC.write(currentMotorPower);
 
   int inputVoltageReading = analogRead(inputVoltagePin);
@@ -108,22 +114,41 @@ void loop() {
   display.clearDisplay();
   display.setTextColor(BLACK);
   display.setCursor(0,0);
-  display.setTextSize(1);
-  display.println("Battery");
-  display.setTextSize(2);
 
 //  lcd.print("Input: ");
 //  lcd.print(inputVoltage, 1);
 //  lcd.print("v");
 
   if (inputVoltage > 14.0) {
-    display.println("Charging...");
-  } else if (inputVoltage > 0.1) {
-    int remainingTime = (inputVoltage - 10.0) * 36.0 / 2.6;
+    vacuumEnabled = false;
     
+    display.setTextSize(1.5);
+    display.print("Charging");
+
+    for (int i = 0; i < chargingState; i++) {
+      display.print(".");
+    }
+
+    chargingState = (chargingState >= 3) ? 0 : chargingState + 1;
+
+    display.println();
+    display.println("Unplug to use");
+  } else if (inputVoltage > 0.1) {
+    vacuumEnabled = true;
+    
+    int remainingTime = (inputVoltage - 10.0) * 36.0 / 2.6;
+  
+    display.setTextSize(1);
+    display.println("Battery");
+    display.setTextSize(2);
     display.print(remainingTime);
-    display.println(" min");
+    display.println("min");
   } else {
+    vacuumEnabled = false;
+      
+    display.setTextSize(1);
+    display.println("Battery");
+    display.setTextSize(2);
     display.println("Charge needed");
   }
   
